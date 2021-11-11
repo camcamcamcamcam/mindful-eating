@@ -1,0 +1,43 @@
+modLoader="javafml"
+loaderVersion="[32,)"
+issueTrackerURL="https://github.com/camcamcamcamcam/mindful-eating/issues"
+license="https://github.com/camcamcamcamcam/mindful-eating/blob/master/LICENSE.txt"
+
+[[mods]]
+    modId="mindful_eating"
+    version="1.0.0"
+    logoFile="logo.png"
+    authors="Cameron"
+    credits="Rye, Gegy"
+    displayName="Mindful Eating"
+    description='''
+    A mod that extends Diet. It rebalances food stats and gives subtle perks for different food groups.
+    '''
+
+[[dependencies.mindful_eating]]
+    modId="forge"
+    mandatory=true
+    versionRange="[35.1.37,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.mindful_eating]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.16.3,1.17)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.mindful_eating]]
+    modId="abnormals_core"
+    mandatory=true
+    versionRange="[3.0.6,)"
+    ordering="AFTER"
+    side="BOTH"
+
+[[dependencies.mindful_eating]]
+    modId="diet"
+    mandatory=true
+    versionRange="[1.16.5-0.21,)"
+    ordering="AFTER"
+    side="BOTH"

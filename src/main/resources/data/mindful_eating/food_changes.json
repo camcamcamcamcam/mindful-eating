@@ -1,0 +1,27 @@
+{
+  "hunger":{},
+  "saturation":{
+    "minecraft:cooked_mutton":0.2,
+    "minecraft:cooked_rabbit":0.1,
+    "minecraft:cooked_salmon":0.2,
+    "minecraft:cooked_cod":0.1
+  },
+  "speedy":{
+    "minecraft:melon_slice":true,
+    "minecraft:sweet_berries":true,
+    "minecraft:cooked_mutton":true,
+    "minecraft:cooked_rabbit":true,
+    "minecraft:cooked_salmon":true,
+    "minecraft:cooked_cod":true,
+    "minecraft:beetroot":true,
+    "minecraft:beetroot_soup":true
+  },
+  "stackability":{
+    "minecraft:beetroot_soup":16,
+    "minecraft:mushroom_stew":16,
+    "minecraft:suspicious_stew":16,
+    "minecraft:rabbit_stew":16,
+    "minecraft:cake":64
+  },
+  "gorgable":{}
+}
