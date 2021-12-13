@@ -1,5 +1,6 @@
 package com.minecraftabnormals.mindful_eating.client;
 
+import com.google.common.eventbus.Subscribe;
 import com.minecraftabnormals.abnormals_core.common.world.storage.tracking.IDataManager;
 import com.minecraftabnormals.mindful_eating.compat.AppleskinCompat;
 import com.minecraftabnormals.mindful_eating.compat.FarmersDelightCompat;
@@ -35,6 +36,8 @@ public class HungerOverlay {
     public static final ResourceLocation GUI_HUNGER_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/hunger_icons.png");
     public static final ResourceLocation GUI_NOURISHMENT_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/nourished_icons.png");
     public static final ResourceLocation GUI_SATURATION_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/saturation_icons.png");
+    public static final ResourceLocation GUI_EMPTY_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/empty_icons.png");
+
 
     private static final Minecraft MC = Minecraft.getInstance();
 
@@ -42,6 +45,13 @@ public class HungerOverlay {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void hungerIconOverride(RenderGameOverlayEvent.Pre event) {
+        if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
+            MC.textureManager.bindTexture(GUI_EMPTY_ICONS_LOCATION);
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void hungerIconOverride(RenderGameOverlayEvent.Post event) {
         if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
             ClientPlayerEntity player = MC.player;
             IDataManager playerManager = ((IDataManager) player);
@@ -69,7 +79,7 @@ public class HungerOverlay {
         RenderSystem.enableBlend();
 
         int left = width / 2 + 91;
-        int top = height - ForgeIngameGui.right_height;
+        int top = height - ForgeIngameGui.right_height + 10;
         ForgeIngameGui.right_height += 10;
 
         FoodStats stats = player.getFoodStats();
@@ -107,8 +117,6 @@ public class HungerOverlay {
             }
 
             blit(matrixStack, x, y, background * 9, group, 9, 9);
-
-
 
             if (idx < level) {
                 blit(matrixStack, x, y, icon + 36, group, 9, 9);

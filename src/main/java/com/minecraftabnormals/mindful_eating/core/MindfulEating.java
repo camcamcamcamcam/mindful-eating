@@ -30,7 +30,7 @@ public class MindfulEating
 
     public static final TrackedData<ResourceLocation> LAST_FOOD = TrackedData.Builder.create(DataProcessors.RESOURCE_LOCATION, () -> new ResourceLocation("stick")).enableSaving().build();
 
-    public static final TrackedData<Integer> CORRECT_FOOD = TrackedData.Builder.create(DataProcessors.INT, () -> 0).enableSaving().build();
+    public static final TrackedData<Integer> SHEEN_COOLDOWN = TrackedData.Builder.create(DataProcessors.INT, () -> 0).enableSaving().build();
 
     public static final TrackedData<Boolean> HURT_OR_HEAL = TrackedData.Builder.create(DataProcessors.BOOLEAN, () -> false).enableSaving().build();
 
@@ -41,7 +41,7 @@ public class MindfulEating
         MinecraftForge.EVENT_BUS.register(this);
 
         TrackedDataManager.INSTANCE.registerData(new ResourceLocation(MindfulEating.MODID, "last_food"), LAST_FOOD);
-        TrackedDataManager.INSTANCE.registerData(new ResourceLocation(MindfulEating.MODID, "correct_food"), CORRECT_FOOD);
+        TrackedDataManager.INSTANCE.registerData(new ResourceLocation(MindfulEating.MODID, "correct_food"), SHEEN_COOLDOWN);
         TrackedDataManager.INSTANCE.registerData(new ResourceLocation(MindfulEating.MODID, "hurt_or_heal"), HURT_OR_HEAL);
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, MEConfig.COMMON_SPEC);

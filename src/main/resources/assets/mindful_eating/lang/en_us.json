@@ -1,0 +1,7 @@
+{
+  "groups.diet.grains.tooltip": "Reduced exhaustion from Mining",
+  "groups.diet.proteins.tooltip": "Reduced exhaustion from Fighting",
+  "groups.diet.fruits.tooltip": "Reduced exhaustion from Swimming",
+  "groups.diet.vegetables.tooltip": "Reduced exhaustion from Sprinting & Jumping",
+  "groups.diet.sugars.tooltip": "Reduced exhaustion from Healing & Hunger"
+}
