@@ -1,6 +1,5 @@
 package com.minecraftabnormals.mindful_eating.client;
 
-import com.google.common.eventbus.Subscribe;
 import com.minecraftabnormals.abnormals_core.common.world.storage.tracking.IDataManager;
 import com.minecraftabnormals.mindful_eating.compat.AppleskinCompat;
 import com.minecraftabnormals.mindful_eating.compat.FarmersDelightCompat;
@@ -25,7 +24,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.diet.api.DietApi;
 import top.theillusivec4.diet.api.IDietGroup;
-import squeek.appleskin.api.event.HUDOverlayEvent;
 
 import java.util.Random;
 import java.util.Set;
@@ -60,11 +58,6 @@ public class HungerOverlay {
 
             renderHungerIcons(event.getWindow(), event.getMatrixStack(), event.getPartialTicks(), player, groups.toArray(new IDietGroup[0]));
         }
-    }
-
-    @SubscribeEvent
-    public static void disableSaturation(HUDOverlayEvent.Saturation event) {
-        event.setCanceled(true);
     }
 
     private static void renderHungerIcons(MainWindow window, MatrixStack matrixStack, float partialTicks, ClientPlayerEntity player, IDietGroup[] groups) {

@@ -3,10 +3,12 @@ package com.minecraftabnormals.mindful_eating.core;
 import com.minecraftabnormals.abnormals_core.common.world.storage.tracking.DataProcessors;
 import com.minecraftabnormals.abnormals_core.common.world.storage.tracking.TrackedData;
 import com.minecraftabnormals.abnormals_core.common.world.storage.tracking.TrackedDataManager;
+import com.minecraftabnormals.mindful_eating.compat.AppleskinCompat;
 import net.minecraft.item.Food;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -28,7 +30,7 @@ public class MindfulEating
 
     public static HashMap<String, Food> ORIGINAL_FOODS = new HashMap<>();
 
-    public static final TrackedData<ResourceLocation> LAST_FOOD = TrackedData.Builder.create(DataProcessors.RESOURCE_LOCATION, () -> new ResourceLocation("stick")).enableSaving().build();
+    public static final TrackedData<ResourceLocation> LAST_FOOD = TrackedData.Builder.create(DataProcessors.RESOURCE_LOCATION, () -> new ResourceLocation("cooked_beef")).enableSaving().build();
 
     public static final TrackedData<Integer> SHEEN_COOLDOWN = TrackedData.Builder.create(DataProcessors.INT, () -> 0).enableSaving().build();
 
@@ -39,6 +41,11 @@ public class MindfulEating
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
 
         MinecraftForge.EVENT_BUS.register(this);
+
+        if (ModList.get().isLoaded("appleskin")) {
+            MinecraftForge.EVENT_BUS.register(AppleskinCompat.class);
+        }
+
 
         TrackedDataManager.INSTANCE.registerData(new ResourceLocation(MindfulEating.MODID, "last_food"), LAST_FOOD);
         TrackedDataManager.INSTANCE.registerData(new ResourceLocation(MindfulEating.MODID, "correct_food"), SHEEN_COOLDOWN);
