@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.minecraftabnormals.mindful_eating.core.registry.other.MEOverrides;
+import jdk.nashorn.internal.runtime.regexp.joni.Config;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.resources.IResource;
@@ -106,6 +107,7 @@ public class MEConfig {
 
     public static class Common {
         public final ConfigValue<Boolean> proportionalDiet;
+        public final ConfigValue<Boolean> nativeDietBuffs;
         public final ConfigValue<Double> exhaustionReduction;
         public final ConfigValue<String>[] foodGroupExhaustion;
 
@@ -114,6 +116,7 @@ public class MEConfig {
             builder.push("mode");
 
             proportionalDiet = builder.comment("Whether the saturation bonus is dependent on Diet's mechanics. If false, it will instead be based on the last food eaten. Default: false").define("Proportional Diet", false);
+            nativeDietBuffs = builder.comment("Whether the buffs added by the Diet mod are enabled. Default: false").define("Native Diet Buffs", false);
             exhaustionReduction = builder.comment("The amount exhaustion is reduced by (if the above config is false). Default: 0.75").define("Exhaustion Reduction", 0.75);
 
             builder.pop();

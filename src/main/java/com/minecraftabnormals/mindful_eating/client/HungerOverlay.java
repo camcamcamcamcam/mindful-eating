@@ -1,6 +1,8 @@
 package com.minecraftabnormals.mindful_eating.client;
 
 import com.minecraftabnormals.abnormals_core.common.world.storage.tracking.IDataManager;
+import com.minecraftabnormals.mindful_eating.compat.AppleskinCompat;
+import com.minecraftabnormals.mindful_eating.compat.FarmersDelightCompat;
 import com.minecraftabnormals.mindful_eating.core.MindfulEating;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -12,6 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.FoodStats;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.gui.ForgeIngameGui;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -21,11 +24,12 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.diet.api.DietApi;
 import top.theillusivec4.diet.api.IDietGroup;
+import squeek.appleskin.api.event.HUDOverlayEvent;
 
 import java.util.Random;
 import java.util.Set;
 
-@Mod.EventBusSubscriber(modid = MindfulEating.MODID)
+@Mod.EventBusSubscriber(modid = MindfulEating.MODID, value = Dist.CLIENT)
 public class HungerOverlay {
 
     public static final ResourceLocation GUI_HUNGER_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/hunger_icons.png");
@@ -44,9 +48,13 @@ public class HungerOverlay {
             Set<IDietGroup> groups = DietApi.getInstance().getGroups(player, new ItemStack(ForgeRegistries.ITEMS.getValue(playerManager.getValue(MindfulEating.LAST_FOOD))));
             if (groups.isEmpty()) return;
 
-            event.setCanceled(true);
             renderHungerIcons(event.getWindow(), event.getMatrixStack(), event.getPartialTicks(), player, groups.toArray(new IDietGroup[0]));
         }
+    }
+
+    @SubscribeEvent
+    public static void disableSaturation(HUDOverlayEvent.Saturation event) {
+        event.setCanceled(true);
     }
 
     private static void renderHungerIcons(MainWindow window, MatrixStack matrixStack, float partialTicks, ClientPlayerEntity player, IDietGroup[] groups) {
@@ -86,7 +94,8 @@ public class HungerOverlay {
             }
 
             if (ModList.get().isLoaded("farmersdelight")
-                    && player.isPotionActive(ForgeRegistries.POTIONS.getValue(new ResourceLocation("farmersdelight:nourished")))) {
+                    && player.isPotionActive(ForgeRegistries.POTIONS.getValue(new ResourceLocation("farmersdelight:nourished")))
+                    && FarmersDelightCompat.NOURISHED_HUNGER_OVERLAY) {
                 MC.textureManager.bindTexture(GUI_NOURISHMENT_ICONS_LOCATION);
                 icon -= player.isPotionActive(Effects.HUNGER) ? 45 : 27;
                 background = 0;
@@ -99,12 +108,7 @@ public class HungerOverlay {
 
             blit(matrixStack, x, y, background * 9, group, 9, 9);
 
-            if (idx <= level) {
-                int tick = MC.ingameGUI.getTicks() % 20;
-                if (playerManager.getValue(MindfulEating.CORRECT_FOOD) > 0 && ((tick < idx + level / 4 && tick > idx - level / 4)
-                || (tick == 49 && i == 0)))
-                    blit(matrixStack, x, y, 108, group, 9, 9);
-            }
+
 
             if (idx < level) {
                 blit(matrixStack, x, y, icon + 36, group, 9, 9);
@@ -112,7 +116,9 @@ public class HungerOverlay {
             else if (idx == level)
                 blit(matrixStack, x, y, icon + 45, group, 9, 9);
 
-            if (ModList.get().isLoaded("appleskin") && MECompat.SHOW_SATURATION_OVERLAY) {
+            MC.textureManager.bindTexture(GUI_SATURATION_ICONS_LOCATION);
+
+            if (ModList.get().isLoaded("appleskin") && AppleskinCompat.SHOW_SATURATION_OVERLAY) {
                 float effectiveSaturationOfBar = (modifiedSaturation / 2.0F) - i;
 
                 int v = group;
@@ -129,12 +135,18 @@ public class HungerOverlay {
                 else
                     u = 0;
 
-                MC.textureManager.bindTexture(GUI_SATURATION_ICONS_LOCATION);
-
                 blit(matrixStack, x, y, u, v, 9, 9);
-
-                MC.textureManager.bindTexture(GUI_HUNGER_ICONS_LOCATION);
             }
+
+            if (idx <= level) {
+                int tick = MC.ingameGUI.getTicks() % 20;
+                if (playerManager.getValue(MindfulEating.SHEEN_COOLDOWN) > 0 && ((tick < idx + level / 4 && tick > idx - level / 4)
+                        || (tick == 49 && i == 0))) {
+                    blit(matrixStack, x, y, 45, group, 9, 9);
+                }
+            }
+
+            MC.textureManager.bindTexture(GUI_HUNGER_ICONS_LOCATION);
 
         }
 

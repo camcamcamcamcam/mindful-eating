@@ -1,9 +1,12 @@
 package com.minecraftabnormals.mindful_eating.core.registry.other;
 
 import com.minecraftabnormals.abnormals_core.common.world.storage.tracking.IDataManager;
+import com.minecraftabnormals.mindful_eating.compat.FarmersDelightCompat;
 import com.minecraftabnormals.mindful_eating.core.MEConfig;
 import com.minecraftabnormals.mindful_eating.core.MindfulEating;
 import com.minecraftabnormals.mindful_eating.core.ExhaustionSource;
+import net.minecraft.block.Block;
+import net.minecraft.block.CakeBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -20,8 +23,10 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHealEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.diet.api.DietApi;
@@ -39,7 +44,7 @@ public class MEEvents {
 
     @SubscribeEvent
     public static void disableDietBuffs(DietEvent.ApplyEffect event) {
-        event.setCanceled(true);
+        event.setCanceled(!MEConfig.COMMON.nativeDietBuffs.get());
     }
 
     @SubscribeEvent
@@ -48,6 +53,9 @@ public class MEEvents {
             ResourceLocation currentFood = event.getItem().getItem().getRegistryName();
             IDataManager playerManager = ((IDataManager) event.getEntityLiving());
             playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
+
+            if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS)
+                return;
 
             if (event.getItem().getItem() instanceof SoupItem) {
                 event.getItem().shrink(1);
@@ -68,17 +76,28 @@ public class MEEvents {
         }
     }
 
+    // when the player eats cake
+    @SubscribeEvent
+    public static void onCakeEaten(PlayerInteractEvent.RightClickBlock event) {
+        Block block = event.getWorld().getBlockState(event.getPos()).getBlock();
+        if (block instanceof CakeBlock) {
+            ResourceLocation currentFood = block.asItem().getRegistryName();
+            IDataManager playerManager = ((IDataManager) event.getEntityLiving());
+            playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
+        }
+    }
+
     // while the player is harvesting a block
     @SubscribeEvent
     public static void onPlayerMining(PlayerEvent.BreakSpeed event) {
-        exhaustionReduction(event.getPlayer(), ExhaustionSource.MINE);
+        exhaustionReductionShortSheen(event.getPlayer(), ExhaustionSource.MINE);
     }
 
     // when the player harvests a block
     @SubscribeEvent
     public static void onBlockHarvested(BlockEvent.BreakEvent event) {
         PlayerEntity player = event.getPlayer();
-        float ratio = exhaustionReduction(player, ExhaustionSource.MINE);
+        float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.MINE);
         player.addExhaustion(0.005F * ratio);
     }
 
@@ -86,7 +105,7 @@ public class MEEvents {
     @SubscribeEvent
     public static void onPlayerAttack(AttackEntityEvent event) {
         PlayerEntity player = event.getPlayer();
-        float ratio = exhaustionReduction(player, ExhaustionSource.ATTACK);
+        float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.ATTACK);
         player.addExhaustion(0.1F * ratio);
     }
 
@@ -95,18 +114,17 @@ public class MEEvents {
     public static void onPlayerDamage(LivingDamageEvent event) {
         if (event.getEntityLiving() instanceof PlayerEntity) {
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
-            float ratio = exhaustionReduction(player, ExhaustionSource.HURT);
+            float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.HURT);
             player.addExhaustion(event.getSource().getHungerDamage() * ratio);
         }
     }
 
-    // when the player naturally regenerates
-    // TODO this way, all player heals will trigger it instead of heals from natural generation, is this worth trying to fix?
+    // when the player naturally regenerates or heals from potion effects
     @SubscribeEvent
     public static void onPlayerHeal(LivingHealEvent event) {
         if (event.getEntityLiving() instanceof PlayerEntity) {
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
-            float ratio = exhaustionReduction(player, ExhaustionSource.HEAL);
+            float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.HEAL);
             player.addExhaustion(6.0F * event.getAmount() * ratio);
         }
     }
@@ -116,7 +134,7 @@ public class MEEvents {
     public static void onPlayerJump(LivingEvent.LivingJumpEvent event) {
         if (event.getEntityLiving() instanceof PlayerEntity) {
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
-            float ratio = exhaustionReduction(player, ExhaustionSource.JUMP);
+            float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.JUMP);
             if (player.isSprinting()) {
                 player.addExhaustion(0.2F * ratio);
             } else {
@@ -136,7 +154,7 @@ public class MEEvents {
         if (player.getActivePotionEffects().size() != 0) {
                 for (EffectInstance effect : player.getActivePotionEffects()) {
                     if (effect.getPotion() == Effects.HUNGER) {
-                        player.addExhaustion(0.0025F * (float) (player.getActivePotionEffect(Effects.HUNGER).getAmplifier() + 1) * exhaustionReduction(player, ExhaustionSource.EFFECT));
+                        player.addExhaustion(0.0025F * (float) (player.getActivePotionEffect(Effects.HUNGER).getAmplifier() + 1) * exhaustionReductionShortSheen(player, ExhaustionSource.EFFECT));
                         break;
                     }
                 }
@@ -149,7 +167,7 @@ public class MEEvents {
         double disZ = player.getPosZ() - player.lastTickPosZ;
 
         if (player.world.isRemote ^ playerManager.getValue(MindfulEating.HURT_OR_HEAL)) {
-            playerManager.setValue(MindfulEating.CORRECT_FOOD, max(0, playerManager.getValue(MindfulEating.CORRECT_FOOD) - 1));
+            playerManager.setValue(MindfulEating.SHEEN_COOLDOWN, max(0, playerManager.getValue(MindfulEating.SHEEN_COOLDOWN) - 1));
         }
 
         if (player.getMotion().length() == 0.0 || disX == 0.0 && disZ == 0.0) {
@@ -159,17 +177,27 @@ public class MEEvents {
         int distance = Math.round(MathHelper.sqrt(disX * disX + disZ * disZ) * 100.0F);
 
         if (player.isSwimming() || player.areEyesInFluid(FluidTags.WATER)) {
-            reduction = 0.0001F * exhaustionReduction(player, ExhaustionSource.SWIM) * Math.round(MathHelper.sqrt(disX * disX + disY * disY + disZ * disZ) * 100.0F);
+            reduction = 0.0001F * exhaustionReductionShortSheen(player, ExhaustionSource.SWIM) * Math.round(MathHelper.sqrt(disX * disX + disY * disY + disZ * disZ) * 100.0F);
         } else if (player.isInWater()) {
-            reduction = 0.0001F * exhaustionReduction(player, ExhaustionSource.SWIM) * distance;
+            reduction = 0.0001F * exhaustionReductionShortSheen(player, ExhaustionSource.SWIM) * distance;
         } else if (player.isOnGround() && player.isSprinting()) {
-            reduction = 0.001F * exhaustionReduction(player, ExhaustionSource.SPRINT) * distance;
+            reduction = 0.001F * exhaustionReductionShortSheen(player, ExhaustionSource.SPRINT) * distance;
         }
 
         player.getFoodStats().addExhaustion(reduction);
     }
 
-    public static float exhaustionReduction(PlayerEntity player, ExhaustionSource source) {
+
+    public static float exhaustionReductionShortSheen(PlayerEntity player, ExhaustionSource source) {
+        return exhaustionReductionLongSheen(player, source, 7);
+    }
+
+    public static float exhaustionReductionLongSheen(PlayerEntity player, ExhaustionSource source) {
+        return exhaustionReductionLongSheen(player, source, 15); // used to be 20
+        // TODO healing makes the sheen keep going for ages for some reason
+    }
+
+    public static float exhaustionReductionLongSheen(PlayerEntity player, ExhaustionSource source, int cooldown) {
         IDataManager playerManager = ((IDataManager) player);
 
         playerManager.setValue(MindfulEating.HURT_OR_HEAL, source == ExhaustionSource.HURT || source == ExhaustionSource.HEAL);
@@ -180,7 +208,7 @@ public class MEEvents {
             for (IDietGroup group : groups) {
                 for (String configGroup : MEConfig.COMMON.foodGroupExhaustion[source.ordinal()].get().split("/"))
                 if (group.getName().equals(configGroup)){
-                    playerManager.setValue(MindfulEating.CORRECT_FOOD, 20);
+                    playerManager.setValue(MindfulEating.SHEEN_COOLDOWN, cooldown);
                     return -MEConfig.COMMON.exhaustionReduction.get().floatValue();
                 }
             }
@@ -194,7 +222,7 @@ public class MEEvents {
                     percentage.set(tracker.getValue(configGroup));
             });
             if (percentage.get() > 0.0F)
-                playerManager.setValue(MindfulEating.CORRECT_FOOD, 20);
+                playerManager.setValue(MindfulEating.SHEEN_COOLDOWN, cooldown);
             return max(-percentage.get(), 1.0F);
         }
     }
