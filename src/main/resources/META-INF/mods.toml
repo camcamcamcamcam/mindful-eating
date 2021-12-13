@@ -5,7 +5,7 @@ license="https://github.com/camcamcamcamcam/mindful-eating/blob/master/LICENSE.t
 
 [[mods]]
     modId="mindful_eating"
-    version="1.0.0"
+    version="1.0.1"
     logoFile="logo.png"
     authors="Cameron"
     credits="Rye, Gegy"
@@ -17,7 +17,7 @@ license="https://github.com/camcamcamcamcam/mindful-eating/blob/master/LICENSE.t
 [[dependencies.mindful_eating]]
     modId="forge"
     mandatory=true
-    versionRange="[35.1.37,)"
+    versionRange="[36.2.4,)"
     ordering="NONE"
     side="BOTH"
 
@@ -38,6 +38,6 @@ license="https://github.com/camcamcamcamcam/mindful-eating/blob/master/LICENSE.t
 [[dependencies.mindful_eating]]
     modId="diet"
     mandatory=true
-    versionRange="[1.16.5-0.21,)"
+    versionRange="[1.16.5-1.0.1.1,)"
     ordering="AFTER"
     side="BOTH"

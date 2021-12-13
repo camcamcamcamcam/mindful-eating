@@ -108,8 +108,8 @@ minecraft {
 dependencies {
     minecraft "net.minecraftforge:forge:${project.minecraft}-${project.forge}"
     implementation fg.deobf("curse.maven:abnormals-core:3157757")
-    implementation fg.deobf("curse.maven:diet:3423118")
-    implementation fg.deobf("curse.maven:appleskin:3035787")
+    implementation fg.deobf("curse.maven:diet:3536671")
+    implementation fg.deobf("curse.maven:appleskin:3512372")
     implementation fg.deobf("curse.maven:farmers-delight:3357442")
 }
 
