@@ -45,6 +45,9 @@ public class HungerOverlay {
     public static void hungerIconOverride(RenderGameOverlayEvent.Pre event) {
         if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
             MC.textureManager.bindTexture(GUI_EMPTY_ICONS_LOCATION);
+            if (ModList.get().isLoaded("farmersdelight")) {
+                FarmersDelightCompat.resetNourishedHungerOverlay();
+            }
         }
     }
 
@@ -99,6 +102,7 @@ public class HungerOverlay {
             if (ModList.get().isLoaded("farmersdelight")
                     && player.isPotionActive(ForgeRegistries.POTIONS.getValue(new ResourceLocation("farmersdelight:nourished")))
                     && FarmersDelightCompat.NOURISHED_HUNGER_OVERLAY) {
+                FarmersDelightCompat.setNourishedHungerOverlay(false);
                 MC.textureManager.bindTexture(GUI_NOURISHMENT_ICONS_LOCATION);
                 icon -= player.isPotionActive(Effects.HUNGER) ? 45 : 27;
                 background = 0;

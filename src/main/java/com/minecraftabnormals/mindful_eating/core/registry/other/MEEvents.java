@@ -194,7 +194,7 @@ public class MEEvents {
 
     public static float exhaustionReductionLongSheen(PlayerEntity player, ExhaustionSource source) {
         return exhaustionReductionLongSheen(player, source, 15); // used to be 20
-        // TODO healing makes the sheen keep going for ages for some reason
+        // TODO healing makes the sheen keep going for ages for some reason, and natural generation is not counted at all
     }
 
     public static float exhaustionReductionLongSheen(PlayerEntity player, ExhaustionSource source, int cooldown) {
