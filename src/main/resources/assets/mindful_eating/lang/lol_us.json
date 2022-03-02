@@ -1,7 +1,7 @@
 {
-  "groups.diet.grains.tooltip": "Kitteh wont get tired from hiting stuf",
-  "groups.diet.proteins.tooltip": "Kitteh wont get tired from ataking",
-  "groups.diet.fruits.tooltip": "Kitteh wont get tired from swiming",
-  "groups.diet.vegetables.tooltip": "Kitteh wont get tired from moving",
-  "groups.diet.sugars.tooltip": "Kitteh wont get tired from bee-ing hungwy or neding fud after ataking"
+  "groups.diet.grains.tooltip": "Kitteh wont get tyrd from hiting stuf",
+  "groups.diet.proteins.tooltip": "Kitteh wont get tyrd from ataking",
+  "groups.diet.fruits.tooltip": "Kitteh wont get tyrd from swiming",
+  "groups.diet.vegetables.tooltip": "Kitteh wont get tyrd from moving",
+  "groups.diet.sugars.tooltip": "Kitteh wont get tyrd from bee-ing hungwy or neding fud after ataking"
 }
