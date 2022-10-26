@@ -25,7 +25,7 @@ public class MEOverrides {
         JsonObject gorgable = new JsonObject();
 
         for (Item item : new Item[]{Items.COOKED_MUTTON, Items.COOKED_RABBIT, Items.COOKED_SALMON, Items.COOKED_COD}) {
-            saturation.addProperty(item.getRegistryName().toString(), Math.round(10.0F * item.getFood().getSaturation() - item.getFood().getHealing()) / 10.0F);
+            saturation.addProperty(item.getRegistryName().toString(), Math.round(10.0F * item.getFoodProperties().getSaturationModifier() - item.getFoodProperties().getNutrition()) / 10.0F);
         }
 
         for (Item item : new Item[]{Items.MELON_SLICE, Items.SWEET_BERRIES, Items.COOKED_MUTTON, Items.COOKED_RABBIT,
@@ -45,7 +45,7 @@ public class MEOverrides {
         object.add("stackability", stackability);
         object.add("gorgable", gorgable);
 
-        File file = new File(Minecraft.getInstance().gameDir,
+        File file = new File(Minecraft.getInstance().gameDirectory,
                 Paths.get("..", "src", "main", "resources", "data", MindfulEating.MODID, "food_changes.json").toString()).getAbsoluteFile();
 
         String data = object.toString();
@@ -58,22 +58,22 @@ public class MEOverrides {
     }
 
     public static void changeHunger(Item item, int hunger) {
-        ObfuscationReflectionHelper.setPrivateValue(Food.class, item.getFood(), hunger, "field_221470_a");
+        ObfuscationReflectionHelper.setPrivateValue(Food.class, item.getFoodProperties(), hunger, "field_221470_a");
         // System.out.println("Changed hunger of " + item + " to " + hunger);
     }
 
     public static void changeSaturation(Item item, float saturation) {
-        ObfuscationReflectionHelper.setPrivateValue(Food.class, item.getFood(), saturation, "field_221471_b");
+        ObfuscationReflectionHelper.setPrivateValue(Food.class, item.getFoodProperties(), saturation, "field_221471_b");
         // System.out.println("Changed saturation of " + item + " to " + saturation);
     }
 
     public static void changeFastEating(Item item, boolean fast) {
-        ObfuscationReflectionHelper.setPrivateValue(Food.class, item.getFood(), fast, "field_221474_e");
+        ObfuscationReflectionHelper.setPrivateValue(Food.class, item.getFoodProperties(), fast, "field_221474_e");
         // System.out.println("Changed fastEating of " + item + " to " + fast);
     }
 
     public static void changeCanEatWhenFull(Item item, boolean gorgable) {
-        ObfuscationReflectionHelper.setPrivateValue(Food.class, item.getFood(), gorgable, "field_221473_d");
+        ObfuscationReflectionHelper.setPrivateValue(Food.class, item.getFoodProperties(), gorgable, "field_221473_d");
         // System.out.println("Changed canEatWhenFull of " + item + " to " + gorgable);
     }
 

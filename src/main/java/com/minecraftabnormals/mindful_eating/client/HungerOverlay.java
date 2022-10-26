@@ -44,7 +44,7 @@ public class HungerOverlay {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void hungerIconOverride(RenderGameOverlayEvent.Pre event) {
         if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
-            MC.textureManager.bindTexture(GUI_EMPTY_ICONS_LOCATION);
+            MC.textureManager.bind(GUI_EMPTY_ICONS_LOCATION);
             if (ModList.get().isLoaded("farmersdelight")) {
                 FarmersDelightCompat.resetNourishedHungerOverlay();
             }
@@ -64,13 +64,13 @@ public class HungerOverlay {
     }
 
     private static void renderHungerIcons(MainWindow window, MatrixStack matrixStack, float partialTicks, ClientPlayerEntity player, IDietGroup[] groups) {
-        MC.textureManager.bindTexture(GUI_HUNGER_ICONS_LOCATION);
+        MC.textureManager.bind(GUI_HUNGER_ICONS_LOCATION);
 
         IDataManager playerManager = ((IDataManager) player);
 
-        int width = window.getScaledWidth();
-        int height = window.getScaledHeight();
-        MC.getProfiler().startSection("food");
+        int width = window.getGuiScaledWidth();
+        int height = window.getGuiScaledHeight();
+        MC.getProfiler().push("food");
 
         RenderSystem.enableBlend();
 
@@ -78,7 +78,7 @@ public class HungerOverlay {
         int top = height - ForgeIngameGui.right_height + 10;
         ForgeIngameGui.right_height += 10;
 
-        FoodStats stats = player.getFoodStats();
+        FoodStats stats = player.getFoodData();
         int level = stats.getFoodLevel();
         float modifiedSaturation = Math.min(stats.getSaturationLevel(), 20);
 
@@ -93,22 +93,22 @@ public class HungerOverlay {
             int group = foodGroup != null ? foodGroup.getTextureOffset() : 0;
             byte background = 0;
 
-            if (player.isPotionActive(Effects.HUNGER))
+            if (player.hasEffect(Effects.HUNGER))
             {
                 icon += 36;
                 background = 13;
             }
 
             if (ModList.get().isLoaded("farmersdelight")
-                    && player.isPotionActive(ForgeRegistries.POTIONS.getValue(new ResourceLocation("farmersdelight:nourished")))
+                    && player.hasEffect(ForgeRegistries.POTIONS.getValue(new ResourceLocation("farmersdelight:nourished")))
                     && FarmersDelightCompat.NOURISHED_HUNGER_OVERLAY) {
                 FarmersDelightCompat.setNourishedHungerOverlay(false);
-                MC.textureManager.bindTexture(GUI_NOURISHMENT_ICONS_LOCATION);
-                icon -= player.isPotionActive(Effects.HUNGER) ? 45 : 27;
+                MC.textureManager.bind(GUI_NOURISHMENT_ICONS_LOCATION);
+                icon -= player.hasEffect(Effects.HUNGER) ? 45 : 27;
                 background = 0;
             }
 
-            if (player.getFoodStats().getSaturationLevel() <= 0.0F && partialTicks % (level * 3 + 1) == 0)
+            if (player.getFoodData().getSaturationLevel() <= 0.0F && partialTicks % (level * 3 + 1) == 0)
             {
                 y = top + (RANDOM.nextInt(3) - 1);
             }
@@ -121,7 +121,7 @@ public class HungerOverlay {
             else if (idx == level)
                 blit(matrixStack, x, y, icon + 45, group, 9, 9);
 
-            MC.textureManager.bindTexture(GUI_SATURATION_ICONS_LOCATION);
+            MC.textureManager.bind(GUI_SATURATION_ICONS_LOCATION);
 
             if (ModList.get().isLoaded("appleskin") && AppleskinCompat.SHOW_SATURATION_OVERLAY) {
                 float effectiveSaturationOfBar = (modifiedSaturation / 2.0F) - i;
@@ -144,21 +144,21 @@ public class HungerOverlay {
             }
 
             if (idx <= level) {
-                int tick = MC.ingameGUI.getTicks() % 20;
+                int tick = MC.gui.getGuiTicks() % 20;
                 if (playerManager.getValue(MindfulEating.SHEEN_COOLDOWN) > 0 && ((tick < idx + level / 4 && tick > idx - level / 4)
                         || (tick == 49 && i == 0))) {
                     blit(matrixStack, x, y, 45, group, 9, 9);
                 }
             }
 
-            MC.textureManager.bindTexture(GUI_HUNGER_ICONS_LOCATION);
+            MC.textureManager.bind(GUI_HUNGER_ICONS_LOCATION);
 
         }
 
         RenderSystem.disableBlend();
-        MC.getProfiler().endSection();
+        MC.getProfiler().pop();
 
-        MC.textureManager.bindTexture(AbstractGui.GUI_ICONS_LOCATION);
+        MC.textureManager.bind(AbstractGui.GUI_ICONS_LOCATION);
     }
 
     public static void blit(MatrixStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {

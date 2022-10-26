@@ -49,7 +49,7 @@ public class MEEvents {
 
     @SubscribeEvent
     public static void onFoodEaten(LivingEntityUseItemEvent.Finish event) {
-        if (event.getItem().isFood() && event.getEntityLiving() instanceof PlayerEntity) {
+        if (event.getItem().isEdible() && event.getEntityLiving() instanceof PlayerEntity) {
             ResourceLocation currentFood = event.getItem().getItem().getRegistryName();
             IDataManager playerManager = ((IDataManager) event.getEntityLiving());
             playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
@@ -62,11 +62,11 @@ public class MEEvents {
                 if (event.getItem().isEmpty()) {
                     event.setResultStack(new ItemStack(Items.BOWL));
                 } else {
-                    if (!((PlayerEntity)event.getEntityLiving()).abilities.isCreativeMode) {
+                    if (!((PlayerEntity)event.getEntityLiving()).abilities.instabuild) {
                         ItemStack itemstack = new ItemStack(Items.BOWL);
                         PlayerEntity playerentity = (PlayerEntity) event.getEntityLiving();
-                        if (!playerentity.inventory.addItemStackToInventory(itemstack)) {
-                            playerentity.dropItem(itemstack, false);
+                        if (!playerentity.inventory.add(itemstack)) {
+                            playerentity.drop(itemstack, false);
                         }
                     }
 
@@ -98,7 +98,7 @@ public class MEEvents {
     public static void onBlockHarvested(BlockEvent.BreakEvent event) {
         PlayerEntity player = event.getPlayer();
         float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.MINE);
-        player.addExhaustion(0.005F * ratio);
+        player.causeFoodExhaustion(0.005F * ratio);
     }
 
     // when the player deals damage
@@ -106,7 +106,7 @@ public class MEEvents {
     public static void onPlayerAttack(AttackEntityEvent event) {
         PlayerEntity player = event.getPlayer();
         float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.ATTACK);
-        player.addExhaustion(0.1F * ratio);
+        player.causeFoodExhaustion(0.1F * ratio);
     }
 
     // when the player takes damage
@@ -115,7 +115,7 @@ public class MEEvents {
         if (event.getEntityLiving() instanceof PlayerEntity) {
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
             float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.HURT);
-            player.addExhaustion(event.getSource().getHungerDamage() * ratio);
+            player.causeFoodExhaustion(event.getSource().getFoodExhaustion() * ratio);
         }
     }
 
@@ -125,7 +125,7 @@ public class MEEvents {
         if (event.getEntityLiving() instanceof PlayerEntity) {
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
             float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.HEAL);
-            player.addExhaustion(6.0F * event.getAmount() * ratio);
+            player.causeFoodExhaustion(6.0F * event.getAmount() * ratio);
         }
     }
 
@@ -136,9 +136,9 @@ public class MEEvents {
             PlayerEntity player = (PlayerEntity) event.getEntityLiving();
             float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.JUMP);
             if (player.isSprinting()) {
-                player.addExhaustion(0.2F * ratio);
+                player.causeFoodExhaustion(0.2F * ratio);
             } else {
-                player.addExhaustion(0.05F * ratio);
+                player.causeFoodExhaustion(0.05F * ratio);
             }
         }
     }
@@ -151,10 +151,10 @@ public class MEEvents {
         PlayerEntity player = event.player;
         IDataManager playerManager = ((IDataManager) player);
 
-        if (player.getActivePotionEffects().size() != 0) {
-                for (EffectInstance effect : player.getActivePotionEffects()) {
-                    if (effect.getPotion() == Effects.HUNGER) {
-                        player.addExhaustion(0.0025F * (float) (player.getActivePotionEffect(Effects.HUNGER).getAmplifier() + 1) * exhaustionReductionShortSheen(player, ExhaustionSource.EFFECT));
+        if (player.getActiveEffects().size() != 0) {
+                for (EffectInstance effect : player.getActiveEffects()) {
+                    if (effect.getEffect() == Effects.HUNGER) {
+                        player.causeFoodExhaustion(0.0025F * (float) (player.getEffect(Effects.HUNGER).getAmplifier() + 1) * exhaustionReductionShortSheen(player, ExhaustionSource.EFFECT));
                         break;
                     }
                 }
@@ -162,21 +162,21 @@ public class MEEvents {
 
         float reduction = 0;
 
-        double disX = player.getPosX() - player.lastTickPosX;
-        double disY = player.getPosY() - player.lastTickPosY;
-        double disZ = player.getPosZ() - player.lastTickPosZ;
+        double disX = player.getX() - player.xOld;
+        double disY = player.getY() - player.yOld;
+        double disZ = player.getZ() - player.zOld;
 
-        if (player.world.isRemote ^ playerManager.getValue(MindfulEating.HURT_OR_HEAL)) {
+        if (player.level.isClientSide ^ playerManager.getValue(MindfulEating.HURT_OR_HEAL)) {
             playerManager.setValue(MindfulEating.SHEEN_COOLDOWN, max(0, playerManager.getValue(MindfulEating.SHEEN_COOLDOWN) - 1));
         }
 
-        if (player.getMotion().length() == 0.0 || disX == 0.0 && disZ == 0.0) {
+        if (player.getDeltaMovement().length() == 0.0 || disX == 0.0 && disZ == 0.0) {
             return;
         }
 
         int distance = Math.round(MathHelper.sqrt(disX * disX + disZ * disZ) * 100.0F);
 
-        if (player.isSwimming() || player.areEyesInFluid(FluidTags.WATER)) {
+        if (player.isSwimming() || player.isEyeInFluid(FluidTags.WATER)) {
             reduction = 0.0001F * exhaustionReductionShortSheen(player, ExhaustionSource.SWIM) * Math.round(MathHelper.sqrt(disX * disX + disY * disY + disZ * disZ) * 100.0F);
         } else if (player.isInWater()) {
             reduction = 0.0001F * exhaustionReductionShortSheen(player, ExhaustionSource.SWIM) * distance;
@@ -184,7 +184,7 @@ public class MEEvents {
             reduction = 0.001F * exhaustionReductionShortSheen(player, ExhaustionSource.SPRINT) * distance;
         }
 
-        player.getFoodStats().addExhaustion(reduction);
+        player.getFoodData().addExhaustion(reduction);
     }
 
 

@@ -41,10 +41,10 @@ public class MEConfig {
 
                 for (Map.Entry<String, Food> entry : MindfulEating.ORIGINAL_FOODS.entrySet()) {
                     Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(entry.getKey()));
-                    MEOverrides.changeHunger(item, entry.getValue().getHealing());
-                    MEOverrides.changeSaturation(item, entry.getValue().getSaturation());
-                    MEOverrides.changeFastEating(item, entry.getValue().isFastEating());
-                    MEOverrides.changeCanEatWhenFull(item, entry.getValue().canEatWhenFull());
+                    MEOverrides.changeHunger(item, entry.getValue().getNutrition());
+                    MEOverrides.changeSaturation(item, entry.getValue().getSaturationModifier());
+                    MEOverrides.changeFastEating(item, entry.getValue().isFastFood());
+                    MEOverrides.changeCanEatWhenFull(item, entry.getValue().canAlwaysEat());
                 }
 
                 ResourceLocation path = new ResourceLocation(MindfulEating.MODID, "food_changes.json");
@@ -67,12 +67,12 @@ public class MEConfig {
                                     MindfulEating.ORIGINAL_ITEMS.put(name, item.getMaxStackSize());
                                 }
 
-                                if (item.isFood() && !MindfulEating.ORIGINAL_FOODS.containsKey(name)) {
-                                    Food food = item.getFood();
-                                    Food.Builder builder = (new Food.Builder()).hunger(food.getHealing())
-                                            .saturation(food.getSaturation());
-                                    if (food.isFastEating()) builder.fastToEat();
-                                    if (food.canEatWhenFull()) builder.setAlwaysEdible();
+                                if (item.isEdible() && !MindfulEating.ORIGINAL_FOODS.containsKey(name)) {
+                                    Food food = item.getFoodProperties();
+                                    Food.Builder builder = (new Food.Builder()).nutrition(food.getNutrition())
+                                            .saturationMod(food.getSaturationModifier());
+                                    if (food.isFastFood()) builder.fast();
+                                    if (food.canAlwaysEat()) builder.alwaysEat();
                                     MindfulEating.ORIGINAL_FOODS.put(name, builder.build());
                                 }
 
@@ -101,7 +101,7 @@ public class MEConfig {
                 }
             }, backgroundExecutor);
 
-            return future.thenCompose(stage::markCompleteAwaitingOthers);
+            return future.thenCompose(stage::wait);
         });
     }
 
