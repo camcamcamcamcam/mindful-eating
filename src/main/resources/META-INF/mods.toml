@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[32,)"
+loaderVersion="[40,)"
 issueTrackerURL="https://github.com/camcamcamcamcam/mindful-eating/issues"
 license="https://github.com/camcamcamcamcam/mindful-eating/blob/master/LICENSE.txt"
 
@@ -17,27 +17,27 @@ license="https://github.com/camcamcamcamcam/mindful-eating/blob/master/LICENSE.t
 [[dependencies.mindful_eating]]
     modId="forge"
     mandatory=true
-    versionRange="[36.2.4,)"
+    versionRange="[40.1.0,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.mindful_eating]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16.3,1.17)"
+    versionRange="[1.18.2,1.19)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.mindful_eating]]
-    modId="abnormals_core"
+    modId="blueprint"
     mandatory=true
-    versionRange="[3.0.6,)"
+    versionRange="[5.5.0,)"
     ordering="AFTER"
     side="BOTH"
 
 [[dependencies.mindful_eating]]
     modId="diet"
     mandatory=true
-    versionRange="[1.16.5-1.0.1.1,)"
+    versionRange="[1.18.2-1.3.2.0,)"
     ordering="AFTER"
     side="BOTH"

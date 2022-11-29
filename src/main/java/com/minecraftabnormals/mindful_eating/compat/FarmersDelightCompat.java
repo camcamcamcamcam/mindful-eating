@@ -1,6 +1,8 @@
 package com.minecraftabnormals.mindful_eating.compat;
 
-import vectorwing.farmersdelight.setup.Configuration;
+import net.minecraftforge.client.gui.IIngameOverlay;
+import vectorwing.farmersdelight.client.gui.NourishmentHungerOverlay;
+import vectorwing.farmersdelight.common.Configuration;
 
 public class FarmersDelightCompat {
 
@@ -8,7 +10,6 @@ public class FarmersDelightCompat {
     public static boolean NOURISHED_HUNGER_OVERLAY = Configuration.NOURISHED_HUNGER_OVERLAY.get();
 
     public static boolean TEMPORARY_NOURISHED_HUNGER_OVERLAY = NOURISHED_HUNGER_OVERLAY;
-
     public static void setNourishedHungerOverlay(boolean flag) {
         TEMPORARY_NOURISHED_HUNGER_OVERLAY = NOURISHED_HUNGER_OVERLAY;
         Configuration.NOURISHED_HUNGER_OVERLAY.set(flag);

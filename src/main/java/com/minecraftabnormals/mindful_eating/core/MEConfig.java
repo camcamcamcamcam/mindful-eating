@@ -4,11 +4,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.minecraftabnormals.mindful_eating.core.registry.other.MEOverrides;
-import jdk.nashorn.internal.runtime.regexp.joni.Config;
-import net.minecraft.item.Food;
-import net.minecraft.item.Item;
-import net.minecraft.resources.IResource;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.event.AddReloadListenerEvent;
@@ -39,7 +38,7 @@ public class MEConfig {
                     MEOverrides.changeStackability(item, entry.getValue());
                 }
 
-                for (Map.Entry<String, Food> entry : MindfulEating.ORIGINAL_FOODS.entrySet()) {
+                for (Map.Entry<String, FoodProperties> entry : MindfulEating.ORIGINAL_FOODS.entrySet()) {
                     Item item = ForgeRegistries.ITEMS.getValue(new ResourceLocation(entry.getKey()));
                     MEOverrides.changeHunger(item, entry.getValue().getNutrition());
                     MEOverrides.changeSaturation(item, entry.getValue().getSaturationModifier());
@@ -48,7 +47,7 @@ public class MEConfig {
                 }
 
                 ResourceLocation path = new ResourceLocation(MindfulEating.MODID, "food_changes.json");
-                try (IResource resource = resourceManager.getResource(path)) {
+                try (Resource resource = resourceManager.getResource(path)) {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
                         JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
 
@@ -68,8 +67,8 @@ public class MEConfig {
                                 }
 
                                 if (item.isEdible() && !MindfulEating.ORIGINAL_FOODS.containsKey(name)) {
-                                    Food food = item.getFoodProperties();
-                                    Food.Builder builder = (new Food.Builder()).nutrition(food.getNutrition())
+                                    FoodProperties food = item.getFoodProperties();
+                                    FoodProperties.Builder builder = (new FoodProperties.Builder()).nutrition(food.getNutrition())
                                             .saturationMod(food.getSaturationModifier());
                                     if (food.isFastFood()) builder.fast();
                                     if (food.canAlwaysEat()) builder.alwaysEat();
