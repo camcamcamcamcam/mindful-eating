@@ -64,12 +64,10 @@ public class MEEvents {
             if (!groups.isEmpty()) {
                 playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
             }
-
-            if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS
-                    && !(event.getItem().getItem() instanceof SuspiciousStewItem))
+            if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS && !(event.getItem().getItem() instanceof SuspiciousStewItem))
                 return;
 
-            if (event.getItem().getItem() instanceof BowlFoodItem) {
+            if (event.getItem().getItem() instanceof BowlFoodItem || event.getItem().getItem() instanceof SuspiciousStewItem) {
                 event.getItem().shrink(1);
                 if (event.getItem().isEmpty()) {
                     event.setResultStack(new ItemStack(Items.BOWL));
