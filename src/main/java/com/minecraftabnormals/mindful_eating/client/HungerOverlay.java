@@ -48,10 +48,8 @@ public class HungerOverlay {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void hungerIconOverride(RenderGameOverlayEvent.PreLayer event) {
-        if (event.getOverlay() == ForgeIngameGui.FOOD_LEVEL_ELEMENT) {
-            if (ModList.get().isLoaded("farmersdelight")) {
-                FarmersDelightCompat.resetNourishedHungerOverlay();
-            }
+        if (event.getOverlay() == ForgeIngameGui.FOOD_LEVEL_ELEMENT && ModList.get().isLoaded("farmersdelight")) {
+            FarmersDelightCompat.resetNourishedHungerOverlay();
         }
     }
 
@@ -81,7 +79,7 @@ public class HungerOverlay {
 
         int left = minecraft.getWindow().getGuiScaledWidth() / 2 + 91;
 
-        drawHungerIcons(player, foodData, top, left, poseStack, playerManager , groups.toArray(new IDietGroup[0]));
+        drawHungerIcons(player, foodData, top, left, poseStack, playerManager, groups.toArray(new IDietGroup[0]));
     }
 
     public static void drawHungerIcons(Player player, FoodData stats, int top, int left, PoseStack poseStack, IDataManager playerManager, IDietGroup[] groups) {
@@ -103,8 +101,7 @@ public class HungerOverlay {
             int group = foodGroup != null ? foodGroup.getTextureOffset() : 0;
             byte background = 0;
 
-            if (player.hasEffect(MobEffects.HUNGER))
-            {
+            if (player.hasEffect(MobEffects.HUNGER)) {
                 icon += 36;
                 background = 13;
             }
@@ -118,16 +115,14 @@ public class HungerOverlay {
                 background = 0;
             }
 
-            if (player.getFoodData().getSaturationLevel() <= 0.0F && ticks % (level * 3 + 1) == 0)
-            {
+            if (player.getFoodData().getSaturationLevel() <= 0.0F && ticks % (level * 3 + 1) == 0) {
                 y = top + (random.nextInt(3) - 1);
             }
 
             minecraft.gui.blit(poseStack, x, y, background * 9, group, 9, 9, 126, 45);
             if (idx < level) {
                 minecraft.gui.blit(poseStack, x, y, icon + 36, group, 9, 9, 126, 45);
-            }
-            else if (idx == level) {
+            } else if (idx == level) {
                 minecraft.gui.blit(poseStack, x, y, icon + 45, group, 9, 9, 126, 45);
             }
 
