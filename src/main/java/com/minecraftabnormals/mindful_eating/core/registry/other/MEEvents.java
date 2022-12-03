@@ -5,17 +5,21 @@ import com.minecraftabnormals.mindful_eating.core.ExhaustionSource;
 import com.minecraftabnormals.mindful_eating.core.MEConfig;
 import com.minecraftabnormals.mindful_eating.core.MindfulEating;
 import com.teamabnormals.blueprint.common.world.storage.tracking.IDataManager;
+import com.teamabnormals.blueprint.core.util.DataUtil;
+import com.teamabnormals.blueprint.core.util.TagUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BowlFoodItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CakeBlock;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
@@ -49,10 +53,14 @@ public class MEEvents {
 
     @SubscribeEvent
     public static void onFoodEaten(LivingEntityUseItemEvent.Finish event) {
-        if (event.getItem().isEdible() && event.getEntityLiving() instanceof Player) {
+        if (event.getItem().isEdible() && event.getEntityLiving() instanceof Player player) {
             ResourceLocation currentFood = event.getItem().getItem().getRegistryName();
             IDataManager playerManager = ((IDataManager) event.getEntityLiving());
-            playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
+            Set<IDietGroup> groups = DietApi.getInstance().getGroups(player, new ItemStack(event.getItem().getItem()));
+
+            if (!groups.isEmpty()) {
+                playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
+            }
 
             if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS)
                 return;
@@ -81,9 +89,12 @@ public class MEEvents {
     public static void onCakeEaten(PlayerInteractEvent.RightClickBlock event) {
         Block block = event.getWorld().getBlockState(event.getPos()).getBlock();
         if (block instanceof CakeBlock) {
-            ResourceLocation currentFood = block.asItem().getRegistryName();
-            IDataManager playerManager = ((IDataManager) event.getEntityLiving());
-            playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
+            Set<IDietGroup> groups = DietApi.getInstance().getGroups(event.getPlayer(), new ItemStack(block));
+            if (event.getPlayer().getFoodData().needsFood() && !groups.isEmpty() && !event.getItemStack().is(TagUtil.itemTag("forge", "tools/knives"))) {
+                ResourceLocation currentFood = block.asItem().getRegistryName();
+                IDataManager playerManager = ((IDataManager) event.getEntityLiving());
+                playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
+            }
         }
     }
 
@@ -174,10 +185,10 @@ public class MEEvents {
             return;
         }
 
-        int distance = Math.round( Mth.sqrt( (float) disX * (float) disX + (float) disZ * (float) disZ) * 100.0F);
+        int distance = Math.round(Mth.sqrt((float) disX * (float) disX + (float) disZ * (float) disZ) * 100.0F);
 
         if (player.isSwimming() || player.isEyeInFluid(FluidTags.WATER)) {
-            reduction = 0.0001F * exhaustionReductionShortSheen(player, ExhaustionSource.SWIM) * Math.round(Mth.sqrt( (float) disX * (float) disX + (float) disZ * (float) disZ) * 100.0F);
+            reduction = 0.0001F * exhaustionReductionShortSheen(player, ExhaustionSource.SWIM) * Math.round(Mth.sqrt((float) disX * (float) disX + (float) disZ * (float) disZ) * 100.0F);
         } else if (player.isInWater()) {
             reduction = 0.0001F * exhaustionReductionShortSheen(player, ExhaustionSource.SWIM) * distance;
         } else if (player.isOnGround() && player.isSprinting()) {

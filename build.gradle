@@ -74,7 +74,7 @@ minecraft {
 
             property 'mixin.env.disableRefMap', 'true'
 
-            arg '-mixin.config=camtest.mixins.json'
+            arg '-mixin.config=mindful_eating.mixins.json'
 
             mods {
                 camtest {
