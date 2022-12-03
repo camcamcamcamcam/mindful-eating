@@ -1,7 +1,5 @@
 package com.minecraftabnormals.mindful_eating.compat;
 
-import net.minecraftforge.client.gui.IIngameOverlay;
-import vectorwing.farmersdelight.client.gui.NourishmentHungerOverlay;
 import vectorwing.farmersdelight.common.Configuration;
 
 public class FarmersDelightCompat {

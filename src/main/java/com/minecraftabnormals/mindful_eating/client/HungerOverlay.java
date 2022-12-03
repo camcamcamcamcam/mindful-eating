@@ -16,10 +16,14 @@ import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.gui.ForgeIngameGui;
 import net.minecraftforge.client.gui.OverlayRegistry;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 import top.theillusivec4.diet.api.DietApi;
 import top.theillusivec4.diet.api.IDietGroup;
@@ -28,23 +32,29 @@ import java.util.Random;
 import java.util.Set;
 
 @OnlyIn(Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = MindfulEating.MODID, value = Dist.CLIENT)
 public class HungerOverlay {
 
     public static final ResourceLocation GUI_HUNGER_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/hunger_icons.png");
     public static final ResourceLocation GUI_NOURISHMENT_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/nourished_icons.png");
     public static final ResourceLocation GUI_SATURATION_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/saturation_icons.png");
-    public static final ResourceLocation GUI_EMPTY_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/empty_icons.png");
 
     private static final Minecraft minecraft = Minecraft.getInstance();
 
     private static final Random random = new Random();
 
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void hungerIconOverride(RenderGameOverlayEvent.PostLayer event) {
+        if (event.getOverlay() == ForgeIngameGui.FOOD_LEVEL_ELEMENT) {
+            if (ModList.get().isLoaded("farmersdelight")) {
+                FarmersDelightCompat.resetNourishedHungerOverlay();
+            }
+        }
+    }
+
     public static void init() {
         MinecraftForge.EVENT_BUS.register(new HungerOverlay());
         OverlayRegistry.enableOverlay(ForgeIngameGui.FOOD_LEVEL_ELEMENT, false);
-        if (ModList.get().isLoaded("farmersdelight")) {
-
-        }
 
         OverlayRegistry.registerOverlayAbove(ForgeIngameGui.FOOD_LEVEL_ELEMENT, "Mindful Eating Hunger", ((gui, poseStack, partialTicks, width, height) -> {
             boolean isMounted = minecraft.player != null && minecraft.player.getVehicle() instanceof LivingEntity;
