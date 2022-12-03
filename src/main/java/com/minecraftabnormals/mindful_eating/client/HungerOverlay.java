@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.teamabnormals.blueprint.common.world.storage.tracking.IDataManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -38,13 +39,15 @@ public class HungerOverlay {
     public static final ResourceLocation GUI_HUNGER_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/hunger_icons.png");
     public static final ResourceLocation GUI_NOURISHMENT_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/nourished_icons.png");
     public static final ResourceLocation GUI_SATURATION_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/saturation_icons.png");
+    public static final ResourceLocation GUI_EMPTY_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/empty_icons.png");
 
     private static final Minecraft minecraft = Minecraft.getInstance();
 
     private static final Random random = new Random();
+    public static int foodIconOffset;
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void hungerIconOverride(RenderGameOverlayEvent.PostLayer event) {
+    public static void hungerIconOverride(RenderGameOverlayEvent.PreLayer event) {
         if (event.getOverlay() == ForgeIngameGui.FOOD_LEVEL_ELEMENT) {
             if (ModList.get().isLoaded("farmersdelight")) {
                 FarmersDelightCompat.resetNourishedHungerOverlay();
@@ -54,7 +57,6 @@ public class HungerOverlay {
 
     public static void init() {
         MinecraftForge.EVENT_BUS.register(new HungerOverlay());
-        OverlayRegistry.enableOverlay(ForgeIngameGui.FOOD_LEVEL_ELEMENT, false);
 
         OverlayRegistry.registerOverlayAbove(ForgeIngameGui.FOOD_LEVEL_ELEMENT, "Mindful Eating Hunger", ((gui, poseStack, partialTicks, width, height) -> {
             boolean isMounted = minecraft.player != null && minecraft.player.getVehicle() instanceof LivingEntity;
@@ -70,9 +72,13 @@ public class HungerOverlay {
         Set<IDietGroup> groups = DietApi.getInstance().getGroups(player, new ItemStack(ForgeRegistries.ITEMS.getValue(playerManager.getValue(MindfulEating.LAST_FOOD))));
         if (groups.isEmpty()) return;
 
-        FoodData foodData = player.getFoodData();
 
-        int top = minecraft.getWindow().getGuiScaledHeight() - gui.right_height;
+        FoodData foodData = player.getFoodData();
+        foodIconOffset = gui.right_height;
+
+        int top = minecraft.getWindow().getGuiScaledHeight() - foodIconOffset + 10;
+        foodIconOffset += 10;
+
         int left = minecraft.getWindow().getGuiScaledWidth() / 2 + 91;
 
         drawHungerIcons(player, foodData, top, left, poseStack, playerManager , groups.toArray(new IDietGroup[0]));

@@ -5,7 +5,6 @@ import com.minecraftabnormals.mindful_eating.core.ExhaustionSource;
 import com.minecraftabnormals.mindful_eating.core.MEConfig;
 import com.minecraftabnormals.mindful_eating.core.MindfulEating;
 import com.teamabnormals.blueprint.common.world.storage.tracking.IDataManager;
-import com.teamabnormals.blueprint.core.util.DataUtil;
 import com.teamabnormals.blueprint.core.util.TagUtil;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
@@ -13,13 +12,12 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.BowlFoodItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SuspiciousStewItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CakeBlock;
-import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
@@ -62,10 +60,10 @@ public class MEEvents {
                 playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
             }
 
-            if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS)
+            if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS && !(event.getItem().getItem() instanceof SuspiciousStewItem))
                 return;
 
-            if (event.getItem().getItem() instanceof BowlFoodItem) {
+            if (event.getItem().getItem() instanceof BowlFoodItem || event.getItem().getItem() instanceof SuspiciousStewItem) {
                 event.getItem().shrink(1);
                 if (event.getItem().isEmpty()) {
                     event.setResultStack(new ItemStack(Items.BOWL));

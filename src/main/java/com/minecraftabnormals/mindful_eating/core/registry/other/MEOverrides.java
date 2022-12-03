@@ -28,7 +28,7 @@ public class MEOverrides {
             saturation.addProperty(item.getRegistryName().toString(), Math.round(10.0F * item.getFoodProperties().getSaturationModifier() - item.getFoodProperties().getNutrition()) / 10.0F);
         }
 
-        for (Item item : new Item[]{Items.MELON_SLICE, Items.SWEET_BERRIES, Items.COOKED_MUTTON, Items.COOKED_RABBIT,
+        for (Item item : new Item[]{Items.MELON_SLICE, Items.SWEET_BERRIES, Items.GLOW_BERRIES, Items.COOKED_MUTTON, Items.COOKED_RABBIT,
                 Items.COOKED_SALMON, Items.COOKED_COD, Items.BEETROOT, Items.BEETROOT_SOUP}) {
             speedy.addProperty(item.getRegistryName().toString(), true);
         }

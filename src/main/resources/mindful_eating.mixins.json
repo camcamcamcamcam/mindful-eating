@@ -6,5 +6,8 @@
   "refmap": "mindful_eating.refmap.json",
   "mixins": [
     "TestMixin"
+  ],
+  "client": [
+    "HungerGuiMixin"
   ]
 }
