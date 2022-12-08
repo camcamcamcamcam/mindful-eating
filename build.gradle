@@ -1,18 +1,14 @@
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
+        maven { url = 'https://maven.minecraftforge.net' }
         mavenCentral()
         maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
         classpath group: "org.spongepowered", name: "mixingradle", version: "0.7-SNAPSHOT"
     }
 }
-
-plugins { id "com.wynprice.cursemaven" version "2.1.1" }
-
 
 apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
@@ -37,7 +33,7 @@ minecraft {
     // stable_#            Stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not always work.
     // Simply re-run your setup task after changing the mappings to update your workspace.
-    mappings channel: project.mappingsChannel, version: project.mappings
+    mappings channel: project.mappingsChannel, version: project.minecraft
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 
     accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -107,10 +103,19 @@ minecraft {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${project.minecraft}-${project.forge}"
-    implementation fg.deobf("curse.maven:abnormals-core:3157757")
-    implementation fg.deobf("curse.maven:diet:3536671")
-    implementation fg.deobf("curse.maven:appleskin:3512372")
-    implementation fg.deobf("curse.maven:farmers-delight:3357442")
+    implementation fg.deobf("curse.maven:abnormals-core-382216:3157757")
+    implementation fg.deobf("curse.maven:diet-443570:3536671")
+    implementation fg.deobf("curse.maven:appleskin-248787:3512372")
+    implementation fg.deobf("curse.maven:farmers-delight-398521:3357442")
+}
+
+repositories {
+    maven {
+        url "https://cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..
