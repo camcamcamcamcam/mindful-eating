@@ -5,7 +5,7 @@ license="https://github.com/camcamcamcamcam/mindful-eating/blob/master/LICENSE.t
 
 [[mods]]
     modId="mindful_eating"
-    version="1.0.1"
+    version="1.1.0"
     logoFile="logo.png"
     authors="Cameron"
     credits="Rye, Gegy"
