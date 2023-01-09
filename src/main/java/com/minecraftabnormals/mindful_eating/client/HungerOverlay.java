@@ -147,7 +147,9 @@ public class HungerOverlay {
                 int tick = MC.gui.getGuiTicks() % 20;
                 if (playerManager.getValue(MindfulEating.SHEEN_COOLDOWN) > 0 && ((tick < idx + level / 4 && tick > idx - level / 4)
                         || (tick == 49 && i == 0))) {
-                    blit(matrixStack, x, y, 45, group, 9, 9);
+                    MC.textureManager.bind(GUI_NOURISHMENT_ICONS_LOCATION);
+                    int uOffset = idx == level ? 18 : 9;
+                    blit(matrixStack, x, y, uOffset, group, 9, 9);
                 }
             }
 

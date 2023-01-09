@@ -4,7 +4,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.minecraftabnormals.mindful_eating.core.registry.other.MEOverrides;
-import jdk.nashorn.internal.runtime.regexp.joni.Config;
 import net.minecraft.item.Food;
 import net.minecraft.item.Item;
 import net.minecraft.resources.IResource;

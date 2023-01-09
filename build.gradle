@@ -50,12 +50,13 @@ minecraft {
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
 
-            property 'mixin.env.disableRefMap', 'true'
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
 
             arg '-mixin.config=mindful_eating.mixins.json'
 
             mods {
-                camtest {
+                mindful_eating {
                     source sourceSets.main
                 }
             }
@@ -72,10 +73,10 @@ minecraft {
 
             property 'mixin.env.disableRefMap', 'true'
 
-            arg '-mixin.config=camtest.mixins.json'
+            arg '-mixin.config=mindful_eating.mixins.json'
 
             mods {
-                camtest {
+                mindful_eating {
                     source sourceSets.main
                 }
             }
@@ -90,10 +91,10 @@ minecraft {
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
 
-            args '--mod', 'camtest', '--all', '--output', file('src/generated/resources/')
+            args '--mod', 'mindful_eating', '--all', '--output', file('src/generated/resources/')
 
             mods {
-                camtest {
+                mindful_eating {
                     source sourceSets.main
                 }
             }
