@@ -152,7 +152,6 @@ public class HungerOverlay {
                 int tick = ticks % 20;
                 if (playerManager.getValue(MindfulEating.SHEEN_COOLDOWN) > 0 && ((tick < idx + level / 4 && tick > idx - level / 4)
                         || (tick == 49 && i == 0))) {
-                    int uOffset = idx == level ? 18 : 9;
                     minecraft.gui.blit(poseStack, x, y, 45, group, 9, 9, 126, 45);
                 }
             }
