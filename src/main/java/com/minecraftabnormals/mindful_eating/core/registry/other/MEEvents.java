@@ -54,16 +54,12 @@ public class MEEvents {
         if (event.getItem().isEdible() && event.getEntityLiving() instanceof Player player) {
             ResourceLocation currentFood = event.getItem().getItem().getRegistryName();
             IDataManager playerManager = ((IDataManager) event.getEntityLiving());
-            if (DietApi.getInstance().getGroups((Player) event.getEntityLiving(), new ItemStack(
-                    ForgeRegistries.ITEMS.getValue(playerManager.getValue(MindfulEating.LAST_FOOD)))).isEmpty()) {
-                return;
-            }
-            playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
             Set<IDietGroup> groups = DietApi.getInstance().getGroups(player, new ItemStack(event.getItem().getItem()));
 
             if (!groups.isEmpty()) {
                 playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
             }
+
             if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS && !(event.getItem().getItem() instanceof SuspiciousStewItem))
                 return;
 
