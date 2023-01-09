@@ -11,6 +11,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.SoupItem;
+import net.minecraft.item.SuspiciousStewItem;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.tags.FluidTags;
@@ -52,12 +53,17 @@ public class MEEvents {
         if (event.getItem().isEdible() && event.getEntityLiving() instanceof PlayerEntity) {
             ResourceLocation currentFood = event.getItem().getItem().getRegistryName();
             IDataManager playerManager = ((IDataManager) event.getEntityLiving());
+            if (DietApi.getInstance().getGroups((PlayerEntity) event.getEntityLiving(), new ItemStack(
+                    ForgeRegistries.ITEMS.getValue(playerManager.getValue(MindfulEating.LAST_FOOD)))).isEmpty()) {
+                return;
+            }
             playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
 
-            if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS)
+            if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS
+                    && !(event.getItem().getItem() instanceof SuspiciousStewItem))
                 return;
 
-            if (event.getItem().getItem() instanceof SoupItem) {
+            if (event.getItem().getItem() instanceof SoupItem || event.getItem().getItem() instanceof SuspiciousStewItem) {
                 event.getItem().shrink(1);
                 if (event.getItem().isEmpty()) {
                     event.setResultStack(new ItemStack(Items.BOWL));
@@ -206,10 +212,11 @@ public class MEEvents {
             Set<IDietGroup> groups = DietApi.getInstance().getGroups(player, new ItemStack(ForgeRegistries.ITEMS.getValue(playerManager.getValue(MindfulEating.LAST_FOOD))));
 
             for (IDietGroup group : groups) {
-                for (String configGroup : MEConfig.COMMON.foodGroupExhaustion[source.ordinal()].get().split("/"))
-                if (group.getName().equals(configGroup)){
-                    playerManager.setValue(MindfulEating.SHEEN_COOLDOWN, cooldown);
-                    return -MEConfig.COMMON.exhaustionReduction.get().floatValue();
+                for (String configGroup : MEConfig.COMMON.foodGroupExhaustion[source.ordinal()].get().split("/")) {
+                    if (group.getName().equals(configGroup)) {
+                        playerManager.setValue(MindfulEating.SHEEN_COOLDOWN, cooldown);
+                        return -MEConfig.COMMON.exhaustionReduction.get().floatValue();
+                    }
                 }
             }
 
