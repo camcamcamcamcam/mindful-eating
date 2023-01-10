@@ -1,22 +1,26 @@
 package com.minecraftabnormals.mindful_eating.client;
 
-import com.minecraftabnormals.abnormals_core.common.world.storage.tracking.IDataManager;
 import com.minecraftabnormals.mindful_eating.compat.AppleskinCompat;
 import com.minecraftabnormals.mindful_eating.compat.FarmersDelightCompat;
 import com.minecraftabnormals.mindful_eating.core.MindfulEating;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MainWindow;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.teamabnormals.blueprint.common.world.storage.tracking.IDataManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.gui.AbstractGui;
-import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Effects;
-import net.minecraft.util.FoodStats;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodData;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.gui.ForgeIngameGui;
+import net.minecraftforge.client.gui.OverlayRegistry;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -28,6 +32,7 @@ import top.theillusivec4.diet.api.IDietGroup;
 import java.util.Random;
 import java.util.Set;
 
+@OnlyIn(Dist.CLIENT)
 @Mod.EventBusSubscriber(modid = MindfulEating.MODID, value = Dist.CLIENT)
 public class HungerOverlay {
 
@@ -36,54 +41,57 @@ public class HungerOverlay {
     public static final ResourceLocation GUI_SATURATION_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/saturation_icons.png");
     public static final ResourceLocation GUI_EMPTY_ICONS_LOCATION = new ResourceLocation(MindfulEating.MODID, "textures/gui/empty_icons.png");
 
+    private static final Minecraft minecraft = Minecraft.getInstance();
 
-    private static final Minecraft MC = Minecraft.getInstance();
-
-    private static final Random RANDOM = new Random();
+    private static final Random random = new Random();
+    public static int foodIconOffset;
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void hungerIconOverride(RenderGameOverlayEvent.Pre event) {
-        if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
-            MC.textureManager.bind(GUI_EMPTY_ICONS_LOCATION);
-            if (ModList.get().isLoaded("farmersdelight")) {
-                FarmersDelightCompat.resetNourishedHungerOverlay();
+    public static void hungerIconOverride(RenderGameOverlayEvent.PreLayer event) {
+        if (event.getOverlay() == ForgeIngameGui.FOOD_LEVEL_ELEMENT && ModList.get().isLoaded("farmersdelight")) {
+            FarmersDelightCompat.resetNourishedHungerOverlay();
+        }
+    }
+
+    public static void init() {
+        MinecraftForge.EVENT_BUS.register(new HungerOverlay());
+
+        OverlayRegistry.registerOverlayAbove(ForgeIngameGui.FOOD_LEVEL_ELEMENT, "Mindful Eating Hunger", ((gui, poseStack, partialTicks, width, height) -> {
+            boolean isMounted = minecraft.player != null && minecraft.player.getVehicle() instanceof LivingEntity;
+            if (!isMounted && !minecraft.options.hideGui && gui.shouldDrawSurvivalElements()) {
+                renderHungerIcons(gui, poseStack);
             }
-        }
+        }));
     }
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void hungerIconOverride(RenderGameOverlayEvent.Post event) {
-        if (event.getType() == RenderGameOverlayEvent.ElementType.FOOD) {
-            ClientPlayerEntity player = MC.player;
-            IDataManager playerManager = ((IDataManager) player);
-            Set<IDietGroup> groups = DietApi.getInstance().getGroups(player, new ItemStack(ForgeRegistries.ITEMS.getValue(playerManager.getValue(MindfulEating.LAST_FOOD))));
-            if (groups.isEmpty()) return;
-
-            renderHungerIcons(event.getWindow(), event.getMatrixStack(), event.getPartialTicks(), player, groups.toArray(new IDietGroup[0]));
-        }
-    }
-
-    private static void renderHungerIcons(MainWindow window, MatrixStack matrixStack, float partialTicks, ClientPlayerEntity player, IDietGroup[] groups) {
-        MC.textureManager.bind(GUI_HUNGER_ICONS_LOCATION);
-
+    public static void renderHungerIcons(ForgeIngameGui gui, PoseStack poseStack) {
+        Player player = minecraft.player;
         IDataManager playerManager = ((IDataManager) player);
+        Set<IDietGroup> groups = DietApi.getInstance().getGroups(player, new ItemStack(ForgeRegistries.ITEMS.getValue(playerManager.getValue(MindfulEating.LAST_FOOD))));
+        if (groups.isEmpty()) return;
 
-        int width = window.getGuiScaledWidth();
-        int height = window.getGuiScaledHeight();
-        MC.getProfiler().push("food");
 
+        FoodData foodData = player.getFoodData();
+        foodIconOffset = gui.right_height;
+
+        int top = minecraft.getWindow().getGuiScaledHeight() - foodIconOffset + 10;
+        foodIconOffset += 10;
+
+        int left = minecraft.getWindow().getGuiScaledWidth() / 2 + 91;
+
+        drawHungerIcons(player, foodData, top, left, poseStack, playerManager, groups.toArray(new IDietGroup[0]));
+    }
+
+    public static void drawHungerIcons(Player player, FoodData stats, int top, int left, PoseStack poseStack, IDataManager playerManager, IDietGroup[] groups) {
+        RenderSystem.setShaderTexture(0, GUI_HUNGER_ICONS_LOCATION);
         RenderSystem.enableBlend();
+        minecraft.getProfiler().push("food");
 
-        int left = width / 2 + 91;
-        int top = height - ForgeIngameGui.right_height + 10;
-        ForgeIngameGui.right_height += 10;
-
-        FoodStats stats = player.getFoodData();
         int level = stats.getFoodLevel();
+        int ticks = minecraft.gui.getGuiTicks();
         float modifiedSaturation = Math.min(stats.getSaturationLevel(), 20);
 
-        for (int i = 0; i < 10; ++i)
-        {
+        for (int i = 0; i < 10; ++i) {
             int idx = i * 2 + 1;
             int x = left - i * 8 - 9;
             int y = top;
@@ -93,35 +101,32 @@ public class HungerOverlay {
             int group = foodGroup != null ? foodGroup.getTextureOffset() : 0;
             byte background = 0;
 
-            if (player.hasEffect(Effects.HUNGER))
-            {
+            if (player.hasEffect(MobEffects.HUNGER)) {
                 icon += 36;
                 background = 13;
             }
 
             if (ModList.get().isLoaded("farmersdelight")
-                    && player.hasEffect(ForgeRegistries.POTIONS.getValue(new ResourceLocation("farmersdelight:nourished")))
+                    && player.hasEffect(ForgeRegistries.MOB_EFFECTS.getValue(new ResourceLocation("farmersdelight", "nourishment")))
                     && FarmersDelightCompat.NOURISHED_HUNGER_OVERLAY) {
                 FarmersDelightCompat.setNourishedHungerOverlay(false);
-                MC.textureManager.bind(GUI_NOURISHMENT_ICONS_LOCATION);
-                icon -= player.hasEffect(Effects.HUNGER) ? 45 : 27;
+                RenderSystem.setShaderTexture(0, GUI_NOURISHMENT_ICONS_LOCATION);
+                icon -= player.hasEffect(MobEffects.HUNGER) ? 45 : 27;
                 background = 0;
             }
 
-            if (player.getFoodData().getSaturationLevel() <= 0.0F && partialTicks % (level * 3 + 1) == 0)
-            {
-                y = top + (RANDOM.nextInt(3) - 1);
+            if (player.getFoodData().getSaturationLevel() <= 0.0F && ticks % (level * 3 + 1) == 0) {
+                y = top + (random.nextInt(3) - 1);
             }
 
-            blit(matrixStack, x, y, background * 9, group, 9, 9);
-
+            minecraft.gui.blit(poseStack, x, y, background * 9, group, 9, 9, 126, 45);
             if (idx < level) {
-                blit(matrixStack, x, y, icon + 36, group, 9, 9);
+                minecraft.gui.blit(poseStack, x, y, icon + 36, group, 9, 9, 126, 45);
+            } else if (idx == level) {
+                minecraft.gui.blit(poseStack, x, y, icon + 45, group, 9, 9, 126, 45);
             }
-            else if (idx == level)
-                blit(matrixStack, x, y, icon + 45, group, 9, 9);
 
-            MC.textureManager.bind(GUI_SATURATION_ICONS_LOCATION);
+            RenderSystem.setShaderTexture(0, GUI_SATURATION_ICONS_LOCATION);
 
             if (ModList.get().isLoaded("appleskin") && AppleskinCompat.SHOW_SATURATION_OVERLAY) {
                 float effectiveSaturationOfBar = (modifiedSaturation / 2.0F) - i;
@@ -140,30 +145,22 @@ public class HungerOverlay {
                 else
                     u = 0;
 
-                blit(matrixStack, x, y, u, v, 9, 9);
+                minecraft.gui.blit(poseStack, x, y, u, v, 9, 9, 126, 45);
             }
 
             if (idx <= level) {
-                int tick = MC.gui.getGuiTicks() % 20;
+                int tick = ticks % 20;
                 if (playerManager.getValue(MindfulEating.SHEEN_COOLDOWN) > 0 && ((tick < idx + level / 4 && tick > idx - level / 4)
                         || (tick == 49 && i == 0))) {
-                    MC.textureManager.bind(GUI_NOURISHMENT_ICONS_LOCATION);
+                    RenderSystem.setShaderTexture(0, GUI_NOURISHMENT_ICONS_LOCATION);
                     int uOffset = idx == level ? 18 : 9;
-                    blit(matrixStack, x, y, uOffset, group, 9, 9);
+                    minecraft.gui.blit(poseStack, x, y, uOffset, group, 9, 9, 126, 45);
                 }
             }
-
-            MC.textureManager.bind(GUI_HUNGER_ICONS_LOCATION);
-
+            RenderSystem.setShaderTexture(0, GUI_HUNGER_ICONS_LOCATION);
         }
-
+        minecraft.getProfiler().pop();
         RenderSystem.disableBlend();
-        MC.getProfiler().pop();
-
-        MC.textureManager.bind(AbstractGui.GUI_ICONS_LOCATION);
-    }
-
-    public static void blit(MatrixStack matrixStack, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight) {
-        AbstractGui.blit(matrixStack, x, y, -90, uOffset, vOffset, uWidth, vHeight, 45, 126);
+        RenderSystem.setShaderTexture(0, GuiComponent.GUI_ICONS_LOCATION);
     }
 }

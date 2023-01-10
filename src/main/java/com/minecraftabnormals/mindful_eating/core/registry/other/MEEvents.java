@@ -1,22 +1,23 @@
 package com.minecraftabnormals.mindful_eating.core.registry.other;
 
-import com.minecraftabnormals.abnormals_core.common.world.storage.tracking.IDataManager;
 import com.minecraftabnormals.mindful_eating.compat.FarmersDelightCompat;
+import com.minecraftabnormals.mindful_eating.core.ExhaustionSource;
 import com.minecraftabnormals.mindful_eating.core.MEConfig;
 import com.minecraftabnormals.mindful_eating.core.MindfulEating;
-import com.minecraftabnormals.mindful_eating.core.ExhaustionSource;
-import net.minecraft.block.Block;
-import net.minecraft.block.CakeBlock;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.item.SoupItem;
-import net.minecraft.item.SuspiciousStewItem;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
+import com.teamabnormals.blueprint.common.world.storage.tracking.IDataManager;
+import com.teamabnormals.blueprint.core.util.TagUtil;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BowlFoodItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SuspiciousStewItem;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CakeBlock;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
@@ -50,29 +51,27 @@ public class MEEvents {
 
     @SubscribeEvent
     public static void onFoodEaten(LivingEntityUseItemEvent.Finish event) {
-        if (event.getItem().isEdible() && event.getEntityLiving() instanceof PlayerEntity) {
+        if (event.getItem().isEdible() && event.getEntityLiving() instanceof Player player) {
             ResourceLocation currentFood = event.getItem().getItem().getRegistryName();
             IDataManager playerManager = ((IDataManager) event.getEntityLiving());
-            if (DietApi.getInstance().getGroups((PlayerEntity) event.getEntityLiving(), new ItemStack(
-                    ForgeRegistries.ITEMS.getValue(playerManager.getValue(MindfulEating.LAST_FOOD)))).isEmpty()) {
-                return;
+            Set<IDietGroup> groups = DietApi.getInstance().getGroups(player, new ItemStack(event.getItem().getItem()));
+
+            if (!groups.isEmpty()) {
+                playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
             }
-            playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
 
-            if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS
-                    && !(event.getItem().getItem() instanceof SuspiciousStewItem))
+            if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS && !(event.getItem().getItem() instanceof SuspiciousStewItem))
                 return;
 
-            if (event.getItem().getItem() instanceof SoupItem || event.getItem().getItem() instanceof SuspiciousStewItem) {
+            if (event.getItem().getItem() instanceof BowlFoodItem || event.getItem().getItem() instanceof SuspiciousStewItem) {
                 event.getItem().shrink(1);
                 if (event.getItem().isEmpty()) {
                     event.setResultStack(new ItemStack(Items.BOWL));
                 } else {
-                    if (!((PlayerEntity)event.getEntityLiving()).abilities.instabuild) {
+                    if (!player.getAbilities().instabuild) {
                         ItemStack itemstack = new ItemStack(Items.BOWL);
-                        PlayerEntity playerentity = (PlayerEntity) event.getEntityLiving();
-                        if (!playerentity.inventory.add(itemstack)) {
-                            playerentity.drop(itemstack, false);
+                        if (!player.getInventory().add(itemstack)) {
+                            player.drop(itemstack, false);
                         }
                     }
 
@@ -87,9 +86,12 @@ public class MEEvents {
     public static void onCakeEaten(PlayerInteractEvent.RightClickBlock event) {
         Block block = event.getWorld().getBlockState(event.getPos()).getBlock();
         if (block instanceof CakeBlock) {
-            ResourceLocation currentFood = block.asItem().getRegistryName();
-            IDataManager playerManager = ((IDataManager) event.getEntityLiving());
-            playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
+            Set<IDietGroup> groups = DietApi.getInstance().getGroups(event.getPlayer(), new ItemStack(block));
+            if (event.getPlayer().getFoodData().needsFood() && !groups.isEmpty() && !event.getItemStack().is(TagUtil.itemTag("forge", "tools/knives"))) {
+                ResourceLocation currentFood = block.asItem().getRegistryName();
+                IDataManager playerManager = ((IDataManager) event.getEntityLiving());
+                playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
+            }
         }
     }
 
@@ -102,7 +104,7 @@ public class MEEvents {
     // when the player harvests a block
     @SubscribeEvent
     public static void onBlockHarvested(BlockEvent.BreakEvent event) {
-        PlayerEntity player = event.getPlayer();
+        Player player = event.getPlayer();
         float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.MINE);
         player.causeFoodExhaustion(0.005F * ratio);
     }
@@ -110,7 +112,7 @@ public class MEEvents {
     // when the player deals damage
     @SubscribeEvent
     public static void onPlayerAttack(AttackEntityEvent event) {
-        PlayerEntity player = event.getPlayer();
+        Player player = event.getPlayer();
         float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.ATTACK);
         player.causeFoodExhaustion(0.1F * ratio);
     }
@@ -118,8 +120,8 @@ public class MEEvents {
     // when the player takes damage
     @SubscribeEvent
     public static void onPlayerDamage(LivingDamageEvent event) {
-        if (event.getEntityLiving() instanceof PlayerEntity) {
-            PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+        if (event.getEntityLiving() instanceof Player) {
+            Player player = (Player) event.getEntityLiving();
             float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.HURT);
             player.causeFoodExhaustion(event.getSource().getFoodExhaustion() * ratio);
         }
@@ -128,8 +130,8 @@ public class MEEvents {
     // when the player naturally regenerates or heals from potion effects
     @SubscribeEvent
     public static void onPlayerHeal(LivingHealEvent event) {
-        if (event.getEntityLiving() instanceof PlayerEntity) {
-            PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+        if (event.getEntityLiving() instanceof Player) {
+            Player player = (Player) event.getEntityLiving();
             float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.HEAL);
             player.causeFoodExhaustion(6.0F * event.getAmount() * ratio);
         }
@@ -138,8 +140,8 @@ public class MEEvents {
     // when the player jumps
     @SubscribeEvent
     public static void onPlayerJump(LivingEvent.LivingJumpEvent event) {
-        if (event.getEntityLiving() instanceof PlayerEntity) {
-            PlayerEntity player = (PlayerEntity) event.getEntityLiving();
+        if (event.getEntityLiving() instanceof Player) {
+            Player player = (Player) event.getEntityLiving();
             float ratio = exhaustionReductionLongSheen(player, ExhaustionSource.JUMP);
             if (player.isSprinting()) {
                 player.causeFoodExhaustion(0.2F * ratio);
@@ -154,17 +156,17 @@ public class MEEvents {
         if (event.phase == TickEvent.Phase.START)
             return;
 
-        PlayerEntity player = event.player;
+        Player player = event.player;
         IDataManager playerManager = ((IDataManager) player);
 
         if (player.getActiveEffects().size() != 0) {
-                for (EffectInstance effect : player.getActiveEffects()) {
-                    if (effect.getEffect() == Effects.HUNGER) {
-                        player.causeFoodExhaustion(0.0025F * (float) (player.getEffect(Effects.HUNGER).getAmplifier() + 1) * exhaustionReductionShortSheen(player, ExhaustionSource.EFFECT));
-                        break;
-                    }
+            for (MobEffectInstance effect : player.getActiveEffects()) {
+                if (effect.getEffect() == MobEffects.HUNGER) {
+                    player.causeFoodExhaustion(0.0025F * (float) (player.getEffect(MobEffects.HUNGER).getAmplifier() + 1) * exhaustionReductionShortSheen(player, ExhaustionSource.EFFECT));
+                    break;
                 }
             }
+        }
 
         float reduction = 0;
 
@@ -180,10 +182,10 @@ public class MEEvents {
             return;
         }
 
-        int distance = Math.round(MathHelper.sqrt(disX * disX + disZ * disZ) * 100.0F);
+        int distance = Math.round(Mth.sqrt((float) disX * (float) disX + (float) disZ * (float) disZ) * 100.0F);
 
         if (player.isSwimming() || player.isEyeInFluid(FluidTags.WATER)) {
-            reduction = 0.0001F * exhaustionReductionShortSheen(player, ExhaustionSource.SWIM) * Math.round(MathHelper.sqrt(disX * disX + disY * disY + disZ * disZ) * 100.0F);
+            reduction = 0.0001F * exhaustionReductionShortSheen(player, ExhaustionSource.SWIM) * Math.round(Mth.sqrt((float) disX * (float) disX + (float) disZ * (float) disZ) * 100.0F);
         } else if (player.isInWater()) {
             reduction = 0.0001F * exhaustionReductionShortSheen(player, ExhaustionSource.SWIM) * distance;
         } else if (player.isOnGround() && player.isSprinting()) {
@@ -194,16 +196,16 @@ public class MEEvents {
     }
 
 
-    public static float exhaustionReductionShortSheen(PlayerEntity player, ExhaustionSource source) {
+    public static float exhaustionReductionShortSheen(Player player, ExhaustionSource source) {
         return exhaustionReductionLongSheen(player, source, 7);
     }
 
-    public static float exhaustionReductionLongSheen(PlayerEntity player, ExhaustionSource source) {
+    public static float exhaustionReductionLongSheen(Player player, ExhaustionSource source) {
         return exhaustionReductionLongSheen(player, source, 15); // used to be 20
-        // TODO healing makes the sheen keep going for ages for some reason, and natural generation is not counted at all
+        //TODO healing makes the sheen keep going for ages for some reason, and natural generation is not counted at all
     }
 
-    public static float exhaustionReductionLongSheen(PlayerEntity player, ExhaustionSource source, int cooldown) {
+    public static float exhaustionReductionLongSheen(Player player, ExhaustionSource source, int cooldown) {
         IDataManager playerManager = ((IDataManager) player);
 
         playerManager.setValue(MindfulEating.HURT_OR_HEAL, source == ExhaustionSource.HURT || source == ExhaustionSource.HEAL);

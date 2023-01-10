@@ -9,6 +9,7 @@
   "speedy":{
     "minecraft:melon_slice":true,
     "minecraft:sweet_berries":true,
+    "minecraft:glow_berries":true,
     "minecraft:cooked_mutton":true,
     "minecraft:cooked_rabbit":true,
     "minecraft:cooked_salmon":true,
