@@ -68,11 +68,10 @@ public class MEEvents {
                 if (event.getItem().isEmpty()) {
                     event.setResultStack(new ItemStack(Items.BOWL));
                 } else {
-                    if (!((Player) event.getEntityLiving()).getAbilities().instabuild) {
+                    if (!player.getAbilities().instabuild) {
                         ItemStack itemstack = new ItemStack(Items.BOWL);
-                        Player playerentity = (Player) event.getEntityLiving();
-                        if (!playerentity.getInventory().add(itemstack)) {
-                            playerentity.drop(itemstack, false);
+                        if (!player.getInventory().add(itemstack)) {
+                            player.drop(itemstack, false);
                         }
                     }
 
