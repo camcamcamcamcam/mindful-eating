@@ -85,13 +85,20 @@ public class MEEvents {
     @SubscribeEvent
     public static void onCakeEaten(PlayerInteractEvent.RightClickBlock event) {
         Block block = event.getWorld().getBlockState(event.getPos()).getBlock();
+        Player player = event.getPlayer();
+        ItemStack heldItem = event.getItemStack();
+
         if (block instanceof CakeBlock) {
-            Set<IDietGroup> groups = DietApi.getInstance().getGroups(event.getPlayer(), new ItemStack(block));
-            if (event.getPlayer().getFoodData().needsFood() && !groups.isEmpty() && !event.getItemStack().is(TagUtil.itemTag("forge", "tools/knives"))) {
+            Set<IDietGroup> groups = DietApi.getInstance().getGroups(player, new ItemStack(block));
+            if (player.getFoodData().needsFood() && !groups.isEmpty() && !heldItem.is(TagUtil.itemTag("forge", "tools/knives"))) {
                 ResourceLocation currentFood = block.asItem().getRegistryName();
-                IDataManager playerManager = ((IDataManager) event.getEntityLiving());
+                IDataManager playerManager = ((IDataManager) player);
                 playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
             }
+        }
+
+        if (ModList.get().isLoaded("farmersdelight")) {
+            FarmersDelightCompat.pieEatenCheck(block, player, heldItem);
         }
     }
 
