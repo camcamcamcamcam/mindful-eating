@@ -53,11 +53,11 @@ public class MEEvents {
         if (event.getItem().isEdible() && event.getEntityLiving() instanceof PlayerEntity) {
             ResourceLocation currentFood = event.getItem().getItem().getRegistryName();
             IDataManager playerManager = ((IDataManager) event.getEntityLiving());
-            if (DietApi.getInstance().getGroups((PlayerEntity) event.getEntityLiving(), new ItemStack(
-                    ForgeRegistries.ITEMS.getValue(playerManager.getValue(MindfulEating.LAST_FOOD)))).isEmpty()) {
-                return;
+            Set<IDietGroup> groups = DietApi.getInstance().getGroups((PlayerEntity) event.getEntityLiving(), new ItemStack(event.getItem().getItem()));
+
+            if (!groups.isEmpty()) {
+                playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
             }
-            playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
 
             if (ModList.get().isLoaded("farmersdelight") && FarmersDelightCompat.ENABLE_STACKABLE_SOUP_ITEMS
                     && !(event.getItem().getItem() instanceof SuspiciousStewItem))
@@ -82,14 +82,19 @@ public class MEEvents {
         }
     }
 
-    // when the player eats cake
+    // when the player eats cake or pie
     @SubscribeEvent
     public static void onCakeEaten(PlayerInteractEvent.RightClickBlock event) {
         Block block = event.getWorld().getBlockState(event.getPos()).getBlock();
+        ItemStack heldItem = event.getItemStack();
+
         if (block instanceof CakeBlock) {
             ResourceLocation currentFood = block.asItem().getRegistryName();
             IDataManager playerManager = ((IDataManager) event.getEntityLiving());
             playerManager.setValue(MindfulEating.LAST_FOOD, currentFood);
+        }
+        if (ModList.get().isLoaded("farmersdelight")) {
+            FarmersDelightCompat.pieEatenCheck(block, event.getPlayer(), heldItem);
         }
     }
 
